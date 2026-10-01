@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: escola
+      POSTGRES_USER: escola_user
+      POSTGRES_PASSWORD: escola_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U escola_user -d escola"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: escola
+      DB_USER: escola_user
+      DB_PASSWORD: escola_pass
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  postgres_data:
